@@ -24,7 +24,7 @@
 #include <math.h>
 
 
-#define MAX_MSG_SIZE	(88 + 16*40)
+#define MAX_MSG_SIZE	728 // (44 us header + 8*20*2 us data) * 2 (1 item = 0.5 us)
 #define MAG_TABLE_SIZE	65536
 
 
@@ -143,7 +143,7 @@ read_msg_data:
 
 			mlen++;
 
-			i = last_pulse + 320;
+			i = last_pulse + 640;
 		}
 
 	}
