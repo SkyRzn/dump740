@@ -22,6 +22,10 @@
 #include "options.h"
 #include <stdio.h>
 
+#ifdef TEST
+#include <time.h>
+#endif
+
 
 static int work()
 {
@@ -30,8 +34,38 @@ static int work()
 	int cnt, i;
 	uint32_t msg[MAX_MESSAGES_IN_BLOCK];
 
+#ifdef TEST
+	clock_t block_t1, block_t2;
+	time_t all_t1, all_t2, all_t2_prev;
+	unsigned long blocks_count = 0;
+	unsigned long blocks_lost;
+	unsigned long block_time;
+
+	all_t1 = time(NULL);
+#endif
+
 	while (block = next_block(&block_index)) {
+#ifdef TEST
+		block_t1 = clock();
+#endif
+
 		cnt = decode(block->data, block->data_length, msg, BLOCK_SIZE);
+
+#ifdef TEST
+		block_t2 = clock();
+		all_t2 = time(NULL);
+
+		blocks_count++;
+
+		if (all_t2 != all_t2_prev) {
+			all_t2_prev = all_t2;
+			blocks_lost = (unsigned long)(((double)(all_t2 - all_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
+			block_time = (unsigned long)(((double)(block_t2 - block_t1))/CLOCKS_PER_SEC*1000000);
+
+			printf("Block handling time: %lu us; blocks handled: %lu; blocks lost: %lu\n", block_time, blocks_count, blocks_lost);
+		}
+
+#endif
 
 		for (i = 0; i < cnt; i++)
 			print_message(msg[i]);

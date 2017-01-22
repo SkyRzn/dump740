@@ -21,14 +21,15 @@
 
 
 #define DEFAULT_FREQUENCY		740000000
-#define DEFAULT_RATE			2000000
+#define SAMPLE_RATE				2000000
 #define DEFAULT_GAIN			2000000
-#define BLOCK_SIZE				65536*4
+#define BLOCK_SIZE				262144 //TODO 524288 ?
 #define MAX_MESSAGES_IN_BLOCK	256
 
 #define ARG_GAIN_MAX	0xfff0
 #define ARG_GAIN_AUTO	0xfff1
 
+#define TEST	1
 
 typedef struct
 {

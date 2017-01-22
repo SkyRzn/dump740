@@ -76,7 +76,7 @@ static void init_rtlsdr()
 	if (options.agc)
 		rtlsdr_set_agc_mode(dev, 1);
 	rtlsdr_set_center_freq(dev, options.freq);
-	rtlsdr_set_sample_rate(dev, DEFAULT_RATE);
+	rtlsdr_set_sample_rate(dev, SAMPLE_RATE);
 	rtlsdr_reset_buffer(dev);
 
 	fprintf(stderr, "Frequency set to: %d Hz\n", rtlsdr_get_center_freq(dev));
