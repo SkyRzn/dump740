@@ -87,7 +87,8 @@ static inline int check_timing(const int *timing, uint16_t *m, int i)
 
 void init_decoder()
 {
-	int i, q;
+	int x, y;
+	float i, q;
 
 	mag_table = malloc(sizeof(uint16_t) * MAG_TABLE_SIZE);
 	if (!mag_table) {
@@ -95,9 +96,13 @@ void init_decoder()
 		exit(-ENOMEM);
 	}
 
-	for (i = 0; i < 256; i++)
-		for (q = 0; q < 256; q++)
-			mag_table[i*256 + q] = lround(sqrt(i*i + q*q) * 181.72);
+	for (x = 0; x < 256; x++) {
+		for (y = 0; y < 256; y++) {
+			i = (float)x - 127.5;
+			q = (float)y - 127.5;
+			mag_table[x*256 + y] = lround(sqrt(i*i + q*q) * 363.45);
+		}
+	}
 }
 
 void close_decoder()
