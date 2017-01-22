@@ -163,20 +163,20 @@ static int data2dec(uint32_t data)
 	return res;
 }
 
-void print_package(uint32_t packet)
+void print_message(uint32_t message)
 {
 
 	int type, data;
 	int fuel, altitude_type, altitude;
 	int speed, angle;
 
-	printf("*%08x;\n", packet);
+	printf("*%08x;\n", message);
 
 	if (options.raw)
 		return;
 
-	type = (packet >> 24);
-	data = packet & 0xfffff;
+	type = (message >> 24);
+	data = message & 0xfffff;
 
 	switch (type) {
 		case TYPE_ZK1:

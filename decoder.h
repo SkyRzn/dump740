@@ -31,7 +31,7 @@
 void init_decoder();
 void close_decoder();
 int decode(uint16_t *block, int blen, uint32_t *msg, int max_mlen);
-void print_package(uint32_t packet);
+void print_message(uint32_t message);
 
 
 #endif

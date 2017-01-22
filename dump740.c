@@ -34,7 +34,7 @@ static int work()
 		cnt = decode(block->data, block->data_length, msg, BLOCK_SIZE);
 
 		for (i = 0; i < cnt; i++)
-			print_package(msg[i]);
+			print_message(msg[i]);
 	}
 }
 
