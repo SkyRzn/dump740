@@ -18,10 +18,9 @@
 
 #include "thread.h"
 #include "options.h"
+#include "routines.h"
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
 
 static pthread_t thread;
@@ -34,8 +33,6 @@ static int end_flag;
 
 int init_thread(void *(*func)(void *))
 {
-	int res;
-
 	end_flag = 0;
 
 	blocks[0].data_length = 0;
@@ -44,28 +41,18 @@ int init_thread(void *(*func)(void *))
 	blocks[0].data = malloc(sizeof(uint16_t) * BLOCK_SIZE);
 	blocks[1].data = malloc(sizeof(uint16_t) * BLOCK_SIZE);
 
-	if (!(blocks[0].data && blocks[1].data)) {
-		fprintf(stderr, "Malloc error.\n");
-		exit(-ENOMEM);
-	}
+	if (!(blocks[0].data && blocks[1].data))
+		fatal("Malloc error.");
 
-	res = pthread_mutex_init(&end_mutex, NULL);
-	if (res != 0) {
-		fprintf(stderr, "Pthread mutex error\n");
-		exit(res);
-	}
+	if (pthread_mutex_init(&end_mutex, NULL) != 0)
+		fatal("Pthread mutex error");
 
-	res = pthread_barrier_init(&barrier, NULL, 2);
-	if (res != 0) {
-		fprintf(stderr, "Pthread barrier error\n");
-		exit(res);
-	}
+	if (pthread_barrier_init(&barrier, NULL, 2) != 0)
+		fatal("Pthread barrier error");
 
-	res = pthread_create(&thread, NULL, func, NULL);
-	if (res != 0) {
-		fprintf(stderr, "Pthread creating error\n");
-		exit(res);
-	}
+	if (pthread_create(&thread, NULL, func, NULL) != 0)
+		fatal("Pthread creating error\n");
+
 	return 0;
 }
 

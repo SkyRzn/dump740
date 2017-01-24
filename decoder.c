@@ -18,9 +18,7 @@
 
 #include "decoder.h"
 #include "options.h"
-#include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <math.h>
 
 
@@ -91,10 +89,8 @@ void init_decoder()
 	float i, q;
 
 	mag_table = malloc(sizeof(uint16_t) * MAG_TABLE_SIZE);
-	if (!mag_table) {
-		fprintf(stderr, "Malloc error.\n");
-		exit(-ENOMEM);
-	}
+	if (!mag_table)
+		fatal("Malloc error.");
 
 	for (x = 0; x < 256; x++) {
 		for (y = 0; y < 256; y++) {

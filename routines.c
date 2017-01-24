@@ -16,48 +16,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DUMP_740_OPTIONS_H_
-#define _DUMP_740_OPTIONS_H_
-
-
 #include "routines.h"
+#include "options.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <time.h>
+#include <stdlib.h> //FIXME найти в других файлах и выпилить
 
 
-#define DEFAULT_FREQUENCY		740000000
-#define SAMPLE_RATE				2000000
-#define DEFAULT_GAIN			2000000
-#define BLOCK_SIZE				524288
-#define MAX_MESSAGES_IN_BLOCK	256
-#define DEFAULT_LOG_LEVEL		LOG_FATAL
-
-#define ARG_GAIN_MAX	0xfff0
-#define ARG_GAIN_AUTO	0xfff1
-
-// #define TEST	1
+const char *log_strings[] = {"DEBUG", "INFO", "WARNING", "ALERT", "FATAL"};
 
 
-typedef struct
+void print(const char *fmt, ...)
 {
-	char *args[2];
-	int dev_index;
-	int freq;
-	int freq_correction;
-	int gain;
-	char *ifile;
-	int raw;
-	unsigned char log_level;
-#ifdef TEST
-	int dump;
-	int bstat;
-#endif
-} options_t;
+	va_list args;
 
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+}
 
-extern options_t options;
+void log_func(unsigned char level, const char *file, const char *func, const char *fmt, ...)
+{
+	char buf[1024];
+	va_list args;
 
+	if (level < options.log_level)
+		return;
 
-int parse_args(int argc, char **argv);
+	if (level > 4)
+		level = 4;
 
+	va_start(args, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
 
-#endif
+	fprintf(stderr, "%lu: [%s -> %s] [%s] %s\n", time(NULL), file, func, log_strings[level], buf);
+
+	if (level == LOG_FATAL)
+		exit(-1);
+}
 

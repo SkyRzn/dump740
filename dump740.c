@@ -20,6 +20,7 @@
 #include "decoder.h"
 #include "thread.h"
 #include "options.h"
+#include "routines.h"
 #include <stdio.h>
 
 #ifdef TEST
@@ -27,8 +28,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 #endif
 
 
@@ -57,12 +56,10 @@ static int work()
 		timeinfo = localtime(&all_t1);
 
 		strftime(tbuf, sizeof(tbuf), "%Y-%m-%d-%H-%M-%S-dump740.raw", timeinfo);
-		fprintf(stderr, "Dump file: %s\n", tbuf);
+		print("Dump file: %s\n", tbuf);
 		fd = open(tbuf, O_WRONLY|O_CREAT|O_TRUNC, 0666);
-		if (fd < 0) {
-			fprintf(stderr, "Dump file opening error: %s\n", strerror(errno));
-			exit(errno);
-		}
+		if (fd < 0)
+			fatal("Dump file opening error: %s", strerror(errno));
 	}
 
 #endif
@@ -92,7 +89,7 @@ static int work()
 						blocks_lost = 0;
 					block_time = (unsigned long)(((double)(block_t2 - block_t1))/CLOCKS_PER_SEC*1000000);
 
-					fprintf(stderr, "%lu: block time = %lu us; blocks handled = %lu; blocks lost = %lu\n", all_t2 - all_t1, block_time, blocks_count, blocks_lost);
+					debug("%lu: block time = %lu us; blocks handled = %lu; blocks lost = %lu", all_t2 - all_t1, block_time, blocks_count, blocks_lost);
 				}
 				all_t2_prev = all_t2;
 			}

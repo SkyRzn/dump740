@@ -18,8 +18,6 @@
 
 #include "options.h"
 #include <argp.h>
-#include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -28,9 +26,9 @@ static struct argp_option argp_options[] = {
 	{"freq",			'f', "<hz>",		0, "Set frequency (default: 740 MHz);\nYou can use 'M' and 'K' as reduction for million and thousand respectively" },
 	{"freq-correction",	'c', "<ppm>",		0, "Set frequency correction (default: 0)" },
 	{"gain",			'g', "<db>",		0, "Set gain (default: max gain, use 'A' for auto-gain)"},
-	{"enable-agc",		'a', 0,				0, "Enable AGC"},
 	{"ifile",			'i', "<filename>",	0, "Read data from file"},
 	{"raw",				'r', 0,				0, "Show only raw messages"},
+	{"log-level",		'l', "<0-4>",		0, "Minimum log level: 0 - DEBUG, 1 - INFO, 2 - WARNING, 3 - FATAL"},
 #ifdef TEST
 	{"dump",			'D', 0,				0, "Dump raw blocks data to file."},
 	{"blocks-statistic",'B', 0,				0, "Show blocks statistic."},
@@ -40,13 +38,6 @@ static struct argp_option argp_options[] = {
 
 
 options_t options;
-
-
-static void arg_error(const char *name, const char *value)
-{
-	fprintf(stderr, "Incorrect argument for '%s': '%s'\n", name, value);
-	exit(-EINVAL);
-}
 
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
@@ -61,7 +52,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		case 'f':
 			len = strlen(arg);
 			if (len < 1)
-				arg_error("-f", arg);
+				fatal("Incorrect argument for freq-correction: '%s'\n", arg);
 			if (arg[len-1] == 'M')
 				mult = 1000000;
 			else if (arg[len-1] == 'K')
@@ -77,14 +68,14 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			else
 				options->gain = atof(arg) * 10;
 			break;
-		case 'a':
-			options->agc = 1;
-			break;
 		case 'i':
 			options->ifile = arg;
 			break;
 		case 'r':
 			options->raw = 1;
+			break;
+		case 'l':
+			options->log_level = atoi(arg);
 			break;
 #ifdef TEST
 		case 'D':
@@ -115,9 +106,9 @@ int parse_args(int argc, char **argv)
 	options.freq = DEFAULT_FREQUENCY;
 	options.freq_correction = 0;
 	options.gain = ARG_GAIN_MAX;
-	options.agc = 0;
 	options.ifile = NULL;
 	options.raw = 0;
+	options.log_level = DEFAULT_LOG_LEVEL;
 #ifdef TEST
 	options.dump = 0;
 	options.bstat = 0;

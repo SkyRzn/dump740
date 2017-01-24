@@ -19,11 +19,10 @@
 #include "receiver.h"
 #include "thread.h"
 #include "options.h"
+#include "routines.h"
 #include <rtl-sdr.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 
@@ -36,65 +35,58 @@ static void init_rtlsdr()
 {
 	int cnt, i;
 	int gains[64];
-	char vendor[256], product[256], serial[256];
+	char vend[256], prod[256], sn[256];
 
 	cnt = rtlsdr_get_device_count();
-	if (!cnt) {
-		fprintf(stderr, "RTLSDR devices not found.\n");
-		exit(-EACCES);
-	}
+	if (!cnt)
+		fatal("RTLSDR devices not found.");
 
 	fprintf(stderr, "Found %d device(s):\n", cnt);
 	for (i = 0; i < cnt; i++) {
-		rtlsdr_get_device_usb_strings(i, vendor, product, serial);
-		fprintf(stderr, "\t%d: %s, %s, SN: %s\n", i, vendor, product, serial);
+		rtlsdr_get_device_usb_strings(i, vend, prod, sn);
+		print("\t%d: %s, %s, %s\n", i, vend, prod, sn);
 	}
 
-	if (rtlsdr_open(&dev, options.dev_index) < 0) {
-		fprintf(stderr, "RTLSDR device error: %s\n", strerror(errno));
-		exit(-EACCES);
-	}
+	if (rtlsdr_open(&dev, options.dev_index) < 0)
+		fatal("RTLSDR device open error: %s", strerror(errno));
+
+	rtlsdr_set_freq_correction(dev, options.freq_correction);
+	rtlsdr_set_center_freq(dev, options.freq);
 
 	rtlsdr_set_tuner_gain_mode(dev, (options.gain != ARG_GAIN_AUTO));
 	if (options.gain != ARG_GAIN_AUTO) {
 		if (options.gain == ARG_GAIN_MAX) {
 			cnt = rtlsdr_get_tuner_gains(dev, gains);
-			if (cnt <= 0) {
-				fprintf(stderr, "Gains not available\n");
-				exit(-EINVAL);
-			}
+			if (cnt <= 0)
+				fatal("Gains not available");
+
 			options.gain = gains[cnt - 1];
-			fprintf(stderr, "Max available gain is: %.2f db\n", options.gain/10.0);
+			print("Max available gain is: %.2f db\n", options.gain/10.0);
 		}
 		rtlsdr_set_tuner_gain(dev, options.gain);
-		fprintf(stderr, "Setting gain to: %.2f db\n", options.gain/10.0);
+		print("Setting gain to: %.2f db\n", options.gain/10.0);
 	} else {
-		fprintf(stderr, "Using AGC\n");
+		print("Using AGC\n");
+		rtlsdr_set_agc_mode(dev, 1);
 	}
 
-	rtlsdr_set_freq_correction(dev, options.freq_correction);
-	if (options.agc)
-		rtlsdr_set_agc_mode(dev, 1);
-	rtlsdr_set_center_freq(dev, options.freq);
 	rtlsdr_set_sample_rate(dev, SAMPLE_RATE);
+
 	rtlsdr_reset_buffer(dev);
 
-	fprintf(stderr, "Frequency set to: %d Hz\n", rtlsdr_get_center_freq(dev));
-	fprintf(stderr, "Frequency correction set to: %d ppm\n", rtlsdr_get_freq_correction(dev));
-	fprintf(stderr, "Gain reported by device: %.2f db\n", rtlsdr_get_tuner_gain(dev)/10.0);
+	print("Frequency set to: %d Hz\n", rtlsdr_get_center_freq(dev));
+	print("Frequency correction set to: %d ppm\n", rtlsdr_get_freq_correction(dev));
+	print("Gain reported by device: %.2f db\n", rtlsdr_get_tuner_gain(dev)/10.0);
 }
 
 void init_receiver()
 {
 	if (options.ifile) {
 		fd = open(options.ifile, O_RDONLY);
-		if (fd < 0) {
-			fprintf(stderr, "File error: %s\n", strerror(errno));
-			exit(fd);
-		}
-	} else {
+		if (fd < 0)
+			fatal("File error: %s", strerror(errno));
+	} else
 		init_rtlsdr();
-	}
 }
 
 void close_receiver()
