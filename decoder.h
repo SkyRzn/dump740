@@ -21,6 +21,7 @@
 
 
 #include <stdint.h>
+#include <stdio.h>
 
 
 #define TYPE_ZK1	1
@@ -31,7 +32,7 @@
 void init_decoder();
 void close_decoder();
 int decode(uint16_t *block, int blen, uint32_t *msg, int max_mlen);
-void print_message(uint32_t message);
+void print_message(FILE *f, uint32_t message);
 
 
 #endif

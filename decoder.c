@@ -168,14 +168,14 @@ static int data2dec(uint32_t data)
 	return res;
 }
 
-void print_message(uint32_t message)
+void print_message(FILE *f, uint32_t message)
 {
 
 	int type, data;
 	int fuel, altitude_type, altitude;
 	int speed, angle;
 
-	printf("*%08x;\n", message);
+	fprintf(f, "*%08x;\n", message);
 
 	if (options.raw)
 		return;
@@ -185,7 +185,7 @@ void print_message(uint32_t message)
 
 	switch (type) {
 		case TYPE_ZK1:
-			printf("  Code: %05x\n", data);
+			fprintf(f, "  Code: %05x\n", data);
 			break;
 
 		case TYPE_ZK2:
@@ -199,17 +199,17 @@ void print_message(uint32_t message)
 
 			altitude = data2dec(data & 0x3fff) * 10; // TODO negative altitude
 
-			printf("  Altitude: %d m (%s)\n", altitude, (altitude_type) ? "absolute" : "relative");
-			printf("  Fuel: %d%%\n", fuel);
+			fprintf(f, "  Altitude: %d m (%s)\n", altitude, (altitude_type) ? "absolute" : "relative");
+			fprintf(f, "  Fuel: %d%%\n", fuel);
 
 			break;
 
 		case TYPE_ZK3:
 			speed = data2dec(data & 0x3ff) * 10;
 			angle = data2dec((data >> 10) & 0x3ff);
-			printf("  Speed: %d km/h\n", speed);
-			printf("  Angle: %d°\n", angle);
+			fprintf(f, "  Speed: %d km/h\n", speed);
+			fprintf(f, "  Angle: %d°\n", angle);
 			break;
 	}
-	printf("\n");
+	fprintf(f, "\n");
 }

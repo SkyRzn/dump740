@@ -31,6 +31,10 @@ static struct argp_option argp_options[] = {
 	{"enable-agc",		'a', 0,				0, "Enable AGC"},
 	{"ifile",			'i', "<filename>",	0, "Read data from file"},
 	{"raw",				'r', 0,				0, "Show only raw messages"},
+#ifdef TEST
+	{"dump",			'D', 0,				0, "Dump raw blocks data to file."},
+	{"blocks-statistic",'B', 0,				0, "Show blocks statistic."},
+#endif
 	{ 0 }
 };
 
@@ -82,6 +86,14 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		case 'r':
 			options->raw = 1;
 			break;
+#ifdef TEST
+		case 'D':
+			options->dump = 1;
+			break;
+		case 'B':
+			options->bstat = 1;
+			break;
+#endif
 		default:
 			return ARGP_ERR_UNKNOWN;
 	}
@@ -106,6 +118,10 @@ int parse_args(int argc, char **argv)
 	options.agc = 0;
 	options.ifile = NULL;
 	options.raw = 0;
+#ifdef TEST
+	options.dump = 0;
+	options.bstat = 0;
+#endif
 
 	struct argp argp = {argp_options, parse_opt, "", program_desc};
 

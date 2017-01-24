@@ -24,6 +24,11 @@
 
 #ifdef TEST
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 #endif
 
 
@@ -36,40 +41,71 @@ static int work()
 
 #ifdef TEST
 	clock_t block_t1, block_t2;
-	time_t all_t1, all_t2, all_t2_prev;
+	time_t all_t1, all_t2, all_t2_prev = 0;
 	unsigned long blocks_count = 0;
-	unsigned long blocks_lost;
 	unsigned long block_time;
+	long blocks_lost;
+	int fd;
 
 	all_t1 = time(NULL);
+
+	if (options.dump) {
+		time_t rawtime;
+		struct tm *timeinfo;
+		char tbuf[32];
+
+		timeinfo = localtime(&all_t1);
+
+		strftime(tbuf, sizeof(tbuf), "%Y-%m-%d-%H-%M-%S-dump740.raw", timeinfo);
+		fprintf(stderr, "Dump file: %s\n", tbuf);
+		fd = open(tbuf, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+		if (fd < 0) {
+			fprintf(stderr, "Dump file opening error: %s\n", strerror(errno));
+			exit(errno);
+		}
+	}
+
 #endif
 
 	while (block = next_block(&block_index)) {
 #ifdef TEST
-		block_t1 = clock();
+		if (options.bstat)
+			block_t1 = clock();
+
+		if (options.dump)
+			write(fd, block->data, block->data_length);
 #endif
 
 		cnt = decode(block->data, block->data_length, msg, BLOCK_SIZE);
 
 #ifdef TEST
-		block_t2 = clock();
-		all_t2 = time(NULL);
+		if (options.bstat) {
+			block_t2 = clock();
+			all_t2 = time(NULL);
 
-		blocks_count++;
+			blocks_count++;
 
-		if (all_t2 != all_t2_prev) {
-			all_t2_prev = all_t2;
-			blocks_lost = (unsigned long)(((double)(all_t2 - all_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
-			block_time = (unsigned long)(((double)(block_t2 - block_t1))/CLOCKS_PER_SEC*1000000);
+			if (all_t2 != all_t2_prev) {
+				if (all_t2_prev > 0) {
+					blocks_lost = (long)(((double)(all_t2 - all_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
+					if (blocks_lost < 0)
+						blocks_lost = 0;
+					block_time = (unsigned long)(((double)(block_t2 - block_t1))/CLOCKS_PER_SEC*1000000);
 
-			printf("Block handling time: %lu us; blocks handled: %lu; blocks lost: %lu\n", block_time, blocks_count, blocks_lost);
+					fprintf(stderr, "%lu: block time = %lu us; blocks handled = %lu; blocks lost = %lu\n", all_t2 - all_t1, block_time, blocks_count, blocks_lost);
+				}
+				all_t2_prev = all_t2;
+			}
 		}
-
 #endif
 
 		for (i = 0; i < cnt; i++)
-			print_message(msg[i]);
+			print_message(stdout, msg[i]);
 	}
+#ifdef TEST
+	if (options.dump)
+		close(fd);
+#endif
 }
 
 int main(int argc, char **argv)
