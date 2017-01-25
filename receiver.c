@@ -101,14 +101,14 @@ void *reader(void *ptr)
 {
 	block_t *block;
 	int block_index = 1;
-	int mlen, res;
+	int mlen, res = -1;
 
-	while (block = next_block(&block_index)) {
+	while ((block = next_block(&block_index))) {
 		if (dev) {
 			res = rtlsdr_read_sync(dev, block->data, sizeof(uint16_t)*BLOCK_SIZE, &mlen);
 		} else if (fd >= 0) {
 			mlen = read(fd, block->data, BLOCK_SIZE);
-			res = (mlen) ? 0 : -EINVAL;
+			res = (mlen) ? 0 : -1;
 		}
 
 		if (res != 0) {
@@ -117,5 +117,6 @@ void *reader(void *ptr)
 		}
 		block->data_length = mlen >> 1;
 	}
+	return NULL;
 }
 

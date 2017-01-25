@@ -31,7 +31,7 @@
 #endif
 
 
-static int work()
+static void work()
 {
 	block_t *block;
 	int block_index = 0;
@@ -39,17 +39,17 @@ static int work()
 	uint32_t msg[MAX_MESSAGES_IN_BLOCK];
 
 #ifdef TEST
-	clock_t total_c0, block_c1, block_c2;
+	clock_t total_c0, block_c1 = 0, block_c2;
 	time_t total_t1, total_t2, total_t2_prev = 0;
 	unsigned long blocks_count = 0;
-	unsigned long block_cime;
+	unsigned long block_time;
 	long blocks_lost;
-	int fd;
+	int fd = -1;
 
 	total_t1 = time(NULL);
+	total_t2 = total_t1;
 
 	if (options.dump) {
-		time_t rawtime;
 		struct tm *timeinfo;
 		char tbuf[32];
 
@@ -66,7 +66,7 @@ static int work()
 
 #endif
 
-	while (block = next_block(&block_index)) {
+	while ((block = next_block(&block_index))) {
 #ifdef TEST
 		if (options.bstat)
 			block_c1 = clock();
@@ -93,10 +93,10 @@ static int work()
 					blocks_lost = (long)(((double)(total_t2 - total_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
 					if (blocks_lost < 0)
 						blocks_lost = 0;
-					block_cime = (unsigned long)(((double)(block_c2 - block_c1))/CLOCKS_PER_SEC*1000000);
+					block_time = (unsigned long)(((double)(block_c2 - block_c1))/CLOCKS_PER_SEC*1000000);
 
 					debug("block time = %lu us; blocks handled = %lu; blocks lost = %lu",
-						  block_cime, blocks_count, blocks_lost);
+						  block_time, blocks_count, blocks_lost);
 				}
 				total_t2_prev = total_t2;
 			}
@@ -106,9 +106,13 @@ static int work()
 			print_message(stdout, msg[i]);
 	}
 #ifdef TEST
-	if (options.bstat)
+	if (options.bstat) {
+		blocks_lost = (long)(((double)(total_t2 - total_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
+		if (blocks_lost < 0)
+			blocks_lost = 0;
 		info("total time = %.3f; total blocks handled = %lu; total blocks lost = %lu",
 			 (double)(clock()-total_c0)/CLOCKS_PER_SEC, blocks_count, blocks_lost);
+	}
 
 	if (options.dump)
 		close(fd);

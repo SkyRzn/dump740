@@ -56,7 +56,8 @@ typedef struct
 extern options_t options;
 
 
-int parse_args(int argc, char **argv);
+void parse_args(int argc, char **argv);
+void print_usage();
 
 
 #endif
