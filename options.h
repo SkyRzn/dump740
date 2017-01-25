@@ -33,7 +33,7 @@
 #define ARG_GAIN_MAX	0xfff0
 #define ARG_GAIN_AUTO	0xfff1
 
-// #define TEST	1
+#define TEST	1
 
 
 typedef struct

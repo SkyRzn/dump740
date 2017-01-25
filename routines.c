@@ -24,7 +24,8 @@
 #include <stdlib.h> //FIXME найти в других файлах и выпилить
 
 
-const char *log_strings[] = {"DEBUG", "INFO", "WARNING", "ALERT", "FATAL"};
+static const char *log_strings[] = {"DEBUG", "INFO", "WARNING", "ALERT", "FATAL"};
+static time_t t0 = 0;
 
 
 void print(const char *fmt, ...)
@@ -41,6 +42,9 @@ void log_func(unsigned char level, const char *file, const char *func, const cha
 	char buf[1024];
 	va_list args;
 
+	if (t0 == 0)
+		t0 = time(NULL);
+
 	if (level < options.log_level)
 		return;
 
@@ -51,7 +55,7 @@ void log_func(unsigned char level, const char *file, const char *func, const cha
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
-	fprintf(stderr, "%lu: [%s -> %s] [%s] %s\n", time(NULL), file, func, log_strings[level], buf);
+	fprintf(stderr, "%lu: [%s -> %s] [%s] %s\n", time(NULL) - t0, file, func, log_strings[level], buf);
 
 	if (level == LOG_FATAL)
 		exit(-1);
