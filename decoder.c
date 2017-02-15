@@ -17,7 +17,6 @@
  */
 
 #include "decoder.h"
-#include "options.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -106,7 +105,14 @@ void close_decoder()
 	free(mag_table);
 }
 
-int decode(uint16_t *block, int blen, uint32_t *msg, int max_mlen)
+int decode(uint16_t *block,
+		   int blen,
+#ifdef TEST
+		   uint64_t *msg,
+#else
+		   uint32_t *msg,
+#endif
+		   int max_mlen)
 {
 	int type, i, last_pulse, mlen = 0;
 	uint32_t data;
@@ -141,6 +147,9 @@ read_msg_data:
 			if (mlen >= max_mlen)
 				return mlen;
 			msg[mlen] = data + (type << 24);
+#ifdef TEST
+			msg[mlen] += (uint64_t)i << 32;
+#endif
 
 			mlen++;
 
@@ -164,12 +173,27 @@ static int data2dec(uint32_t data)
 	return res;
 }
 
-void print_message(FILE *f, uint32_t message)
+void print_message(FILE *f,
+#ifdef TEST
+					uint64_t tmessage,
+					unsigned long block_n
+#else
+					uint32_t message
+#endif
+)
 {
 
 	int type, data;
 	int fuel, altitude_type, altitude;
 	int speed, angle;
+
+#ifdef TEST
+	uint32_t message;
+	message = tmessage & 0xffffffff;
+	tmessage >>= 32;
+	tmessage += (uint64_t)block_n * (BLOCK_SIZE >> 1);
+	fprintf(f, "offset = %lu\n", tmessage);
+#endif
 
 	fprintf(f, "*%08x;\n", message);
 

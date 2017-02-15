@@ -20,6 +20,7 @@
 #define _DUMP_740_DECODER_H_
 
 
+#include "options.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -31,8 +32,22 @@
 
 void init_decoder();
 void close_decoder();
-int decode(uint16_t *block, int blen, uint32_t *msg, int max_mlen);
-void print_message(FILE *f, uint32_t message);
+int decode(uint16_t *block,
+		   int blen,
+#ifdef TEST
+		   uint64_t *msg,
+#else
+		   uint32_t *msg,
+#endif
+		   int max_mlen);
+void print_message(FILE *f,
+#ifdef TEST
+					uint64_t tmessage,
+					unsigned long block_n
+#else
+					uint32_t message
+#endif
+);
 
 
 #endif

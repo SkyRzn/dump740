@@ -36,9 +36,9 @@ static void work()
 	block_t *block;
 	int block_index = 0;
 	int cnt, i;
-	uint32_t msg[MAX_MESSAGES_IN_BLOCK];
 
 #ifdef TEST
+	uint64_t msg[MAX_MESSAGES_IN_BLOCK];
 	clock_t total_c0, block_c1 = 0, block_c2;
 	time_t total_t1, total_t2, total_t2_prev = 0;
 	unsigned long blocks_count = 0;
@@ -63,14 +63,13 @@ static void work()
 	}
 
 	total_c0 = clock();
-
+#else
+	uint32_t msg[MAX_MESSAGES_IN_BLOCK];
 #endif
 
 	while ((block = next_block(&block_index))) {
 #ifdef TEST
-		if (options.bstat)
-			block_c1 = clock();
-
+		block_c1 = clock();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
@@ -82,37 +81,37 @@ static void work()
 		cnt = decode(block->data, block->data_length, msg, BLOCK_SIZE);
 
 #ifdef TEST
-		if (options.bstat) {
-			block_c2 = clock();
-			total_t2 = time(NULL);
+		block_c2 = clock();
+		total_t2 = time(NULL);
 
-			blocks_count++;
+		blocks_count++;
 
-			if (total_t2 != total_t2_prev) {
-				if (total_t2_prev > 0) {
-					blocks_lost = (long)(((double)(total_t2 - total_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
-					if (blocks_lost < 0)
-						blocks_lost = 0;
-					block_time = (unsigned long)(((double)(block_c2 - block_c1))/CLOCKS_PER_SEC*1000000);
+		if (total_t2 != total_t2_prev) {
+			if (total_t2_prev > 0) {
+				blocks_lost = (long)(((double)(total_t2 - total_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
+				if (blocks_lost < 0)
+					blocks_lost = 0;
+				block_time = (unsigned long)(((double)(block_c2 - block_c1))/CLOCKS_PER_SEC*1000000);
 
-					debug("block time = %lu us; blocks handled = %lu; blocks lost = %lu",
-						  block_time, blocks_count, blocks_lost);
-				}
-				total_t2_prev = total_t2;
+				debug("block time = %lu us; blocks handled = %lu; blocks lost = %lu",
+						block_time, blocks_count, blocks_lost);
 			}
+			total_t2_prev = total_t2;
 		}
 #endif
 		for (i = 0; i < cnt; i++)
+#ifdef TEST
+			print_message(stdout, msg[i], blocks_count-1);
+#else
 			print_message(stdout, msg[i]);
+#endif
 	}
 #ifdef TEST
-	if (options.bstat) {
-		blocks_lost = (long)(((double)(total_t2 - total_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
-		if (blocks_lost < 0)
-			blocks_lost = 0;
-		info("total time = %.3f; total blocks handled = %lu; total blocks lost = %lu",
-			 (double)(clock()-total_c0)/CLOCKS_PER_SEC, blocks_count, blocks_lost);
-	}
+	blocks_lost = (long)(((double)(total_t2 - total_t1) * SAMPLE_RATE) / BLOCK_SIZE - blocks_count);
+	if (blocks_lost < 0)
+		blocks_lost = 0;
+	info("total time = %.3f; total blocks handled = %lu; total blocks lost = %lu",
+			(double)(clock()-total_c0)/CLOCKS_PER_SEC, blocks_count, blocks_lost);
 
 	if (options.dump)
 		close(fd);

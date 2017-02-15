@@ -46,10 +46,7 @@ typedef struct
 	char *ifile;
 	int raw;
 	unsigned char log_level;
-#ifdef TEST
 	int dump;
-	int bstat;
-#endif
 } options_t;
 
 
